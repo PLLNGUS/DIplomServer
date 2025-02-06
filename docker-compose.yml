@@ -1,0 +1,42 @@
+version: '3.4'
+
+services:
+  diplomserver:
+    image: ${DOCKER_REGISTRY-}diplomserver
+    build:
+      context: .
+      dockerfile: DIplomServer/Dockerfile
+    depends_on:
+      - diplom_db
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:5000
+      diplom_connection_db_string: "Host=diplom_db;Port=5432;Database=HabitTracker;Username=postgres;Password=123456;Include Error Detail=true"
+    ports:
+      - 5000:5000
+    networks:
+      - caching-network
+
+  diplom_db:
+    container_name: diplom_db
+    image: postgres:latest
+    hostname: postgres2
+    ports:
+      - "5433:5433"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 123456
+      POSTGRES_DB: HabitTracker
+    healthcheck:
+      test: ["CMD-SHELL", "psql -U postgres -d HabitTracker -c 'SELECT 1' || exit 1"]
+    volumes:
+      - db_data:/var/lib/postgresql/data 
+    networks:
+      - caching-network
+ 
+volumes:
+  db_data:
+
+networks:
+  caching-network:
+    driver: bridge
