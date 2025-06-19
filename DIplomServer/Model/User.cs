@@ -8,6 +8,13 @@
         public string Password { get; set; }
         public int Level { get; set; } = 1;
         public int ExperiencePoints { get; set; } = 0;
-        public byte[]? ProfilePicture { get; set; } 
+        public string? ProfilePicture { get; set; }
+        public int CurrentStreak { get; set; } = 0;
+        public int MaxStreak { get; set; } = 0;
+        public DateTime? LastStreakDate { get; set; }
+        public string BorderStyle { get; set; } = "solid:#FF000000";
+
+        public ICollection<UserAchievement>? UserAchievements { get; set; }
+
     }
 }

@@ -3,6 +3,7 @@ using System;
 using DIplomServer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace DIplomServer.Migrations
 {
     [DbContext(typeof(HbtContext))]
-    partial class HbtContextModelSnapshot : ModelSnapshot
+    [Migration("20250521074839_migrat11111")]
+    partial class migrat11111
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -56,7 +59,7 @@ namespace DIplomServer.Migrations
                     b.ToTable("Achievements");
                 });
 
-            modelBuilder.Entity("DIplomServer.Model.Habit", b =>
+            modelBuilder.Entity("DIplomServer.Model.DailyTask", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -64,9 +67,47 @@ namespace DIplomServer.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("CategoryKey")
+                    b.Property<string>("Category")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<DateTime>("Date")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<bool>("IsCompleted")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<int>("Priority")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("DailyTasks");
+                });
+
+            modelBuilder.Entity("DIplomServer.Model.Habit", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<string>("DaysOfWeek")
                         .IsRequired()
@@ -186,9 +227,6 @@ namespace DIplomServer.Migrations
                     b.Property<bool>("IsCompleted")
                         .HasColumnType("boolean");
 
-                    b.Property<bool>("IsRewardClaimed")
-                        .HasColumnType("boolean");
-
                     b.Property<DateTime>("StartDate")
                         .HasColumnType("timestamp with time zone");
 
@@ -237,6 +275,37 @@ namespace DIplomServer.Migrations
                     b.ToTable("QuestTemplates");
                 });
 
+            modelBuilder.Entity("DIplomServer.Model.Reminder", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<bool>("IsCompleted")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false);
+
+                    b.Property<DateTime>("ReminderTime")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("TaskId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TaskId");
+
+                    b.ToTable("Reminders");
+                });
+
             modelBuilder.Entity("DIplomServer.Model.User", b =>
                 {
                     b.Property<int>("Id")
@@ -245,13 +314,6 @@ namespace DIplomServer.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("BorderStyle")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<int>("CurrentStreak")
-                        .HasColumnType("integer");
-
                     b.Property<string>("Email")
                         .IsRequired()
                         .HasColumnType("text");
@@ -259,16 +321,10 @@ namespace DIplomServer.Migrations
                     b.Property<int>("ExperiencePoints")
                         .HasColumnType("integer");
 
-                    b.Property<DateTime?>("LastStreakDate")
-                        .HasColumnType("timestamp with time zone");
-
                     b.Property<int>("Level")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("integer")
                         .HasDefaultValue(1);
-
-                    b.Property<int>("MaxStreak")
-                        .HasColumnType("integer");
 
                     b.Property<string>("Nickname")
                         .IsRequired()
@@ -361,6 +417,17 @@ namespace DIplomServer.Migrations
                     b.ToTable("UserQuests");
                 });
 
+            modelBuilder.Entity("DIplomServer.Model.DailyTask", b =>
+                {
+                    b.HasOne("DIplomServer.Model.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("DIplomServer.Model.Habit", b =>
                 {
                     b.HasOne("DIplomServer.Model.User", "User")
@@ -408,6 +475,17 @@ namespace DIplomServer.Migrations
                     b.Navigation("Template");
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("DIplomServer.Model.Reminder", b =>
+                {
+                    b.HasOne("DIplomServer.Model.DailyTask", "DailyTask")
+                        .WithMany()
+                        .HasForeignKey("TaskId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("DailyTask");
                 });
 
             modelBuilder.Entity("DIplomServer.Model.UserAchievement", b =>

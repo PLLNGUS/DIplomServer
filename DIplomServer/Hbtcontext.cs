@@ -1,5 +1,6 @@
 ﻿using DIplomServer.Model;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Win32;
 
 namespace DIplomServer
 {
@@ -9,10 +10,17 @@ namespace DIplomServer
 
         public DbSet<User> Users { get; set; }
         public DbSet<Habit> Habits { get; set; }
-        public DbSet<DailyTask> DailyTasks { get; set; }
-        public DbSet<Reminder> Reminders { get; set; }
         public DbSet<HabitDiary> HabitDiaries { get; set; }
         public DbSet<Achievement> Achievements { get; set; }
+        public DbSet<UserAchievement> UserAchievements { get; set; } 
+        public DbSet<HabitLog> HabitLogs { get; set; }
+        public DbSet<Quest> Quests { get; set; }
+        public DbSet<QuestTemplate> QuestTemplates { get; set; }
+        public DbSet<UserQuest> UserQuests { get; set; }
+        
+
+
+
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -45,33 +53,6 @@ namespace DIplomServer
                       .OnDelete(DeleteBehavior.Cascade);
             });
 
-            // Конфигурация DailyTask
-            modelBuilder.Entity<DailyTask>(entity =>
-            {
-                entity.HasKey(d => d.Id);
-                entity.Property(d => d.Name).IsRequired().HasMaxLength(100);
-                entity.Property(d => d.Description).HasMaxLength(255);
-                entity.Property(d => d.Category).HasMaxLength(50);
-
-                entity.HasOne(d => d.User)
-                      .WithMany()
-                      .HasForeignKey(d => d.UserId)
-                      .OnDelete(DeleteBehavior.Cascade);
-            });
-
-            // Конфигурация Reminder
-            modelBuilder.Entity<Reminder>(entity =>
-            {
-                entity.HasKey(r => r.Id);
-                entity.Property(r => r.Title).IsRequired().HasMaxLength(100);
-                entity.Property(r => r.IsCompleted).HasDefaultValue(false);
-
-                entity.HasOne(r => r.DailyTask)
-                      .WithMany()
-                      .HasForeignKey(r => r.TaskId)
-                      .OnDelete(DeleteBehavior.Cascade);
-            });
-
             // Конфигурация HabitDiary
             modelBuilder.Entity<HabitDiary>(entity =>
             {
@@ -96,12 +77,25 @@ namespace DIplomServer
                 entity.HasKey(a => a.Id);
                 entity.Property(a => a.Title).IsRequired().HasMaxLength(100);
                 entity.Property(a => a.Description).HasMaxLength(255);
-                entity.Property(a => a.DateReceived).IsRequired();
+                entity.Property(a => a.ImageIndex).HasDefaultValue("1");
+                entity.Property(a => a.DefaultTarget).IsRequired().HasDefaultValue(1); // Добавляем DefaultTarget
+                                                                                       });
+                modelBuilder.Entity<UserAchievement>(entity =>
+            {
+                entity.HasKey(ua => ua.Id);
 
-                entity.HasOne(a => a.User)
-                      .WithMany()
-                      .HasForeignKey(a => a.UserId)
+                entity.HasOne(ua => ua.User)
+                      .WithMany(u => u.UserAchievements)
+                      .HasForeignKey(ua => ua.UserId)
                       .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne(ua => ua.Achievement)
+                      .WithMany()
+                      .HasForeignKey(ua => ua.AchievementId)
+                      .OnDelete(DeleteBehavior.Cascade);
+
+                entity.Property(ua => ua.IsCompleted).HasDefaultValue(false);
+                entity.Property(ua => ua.CurrentProgress).HasDefaultValue(0);
             });
         }
     }
